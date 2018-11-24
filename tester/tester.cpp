@@ -11,14 +11,14 @@ int main (int argc, char **argv)
 	std::unique_ptr<loader::Loader> loader_v;
     loader::Binary* binary_v;
 	std::string fname;
-	size_t i;
+	size_t i, j;
     loader::Section* sec;
     loader::Symbol* sym;
 
 
 	if (argc < 2)
 	{
-		fprintf(stderr,"USAGE: %s <binary>\n", argv[0]);
+		fprintf(stderr,"USAGE: %s <binary> [<section_name>]\n", argv[0]);
 		return 1;
 	}
 
@@ -33,13 +33,14 @@ int main (int argc, char **argv)
 
         binary_v = loader_v->getBinary();
 
-        fprintf(stdout, "loaded binary '%s' %s%s (%u bits) entry@0x%016jx\n",
+        fprintf(stdout, "[!] loaded binary '%s' %s%s (%u bits) entry@0x%016jx\n",
             binary_v->getFileName(),
             binary_v->getTypeStr(),
             binary_v->getBinaryArchStr(),
             binary_v->getBits(),
             binary_v->getEntryPoint());
 
+        fprintf(stdout, "[+] Sections table:\n");
         for (i = 0; i < binary_v->getSections().size(); i++)
         {
             sec = &binary_v->getSections()[i];
@@ -50,7 +51,7 @@ int main (int argc, char **argv)
         
         if (binary_v->getSymbols().size())
         {
-            fprintf (stdout, "Symbol tables:\n");
+            fprintf (stdout, "[+] Symbol tables:\n");
             for (i = 0; i < binary_v->getSymbols().size(); i++)
             {
                 sym = &binary_v->getSymbols()[i];
@@ -61,6 +62,28 @@ int main (int argc, char **argv)
             }
         }
         
+        if (argc == 3)
+        {
+            fprintf (stdout, "\n[+] Section %s dump:", argv[2]);
+            for (i = 0; i < binary_v->getSections().size(); i++)
+            {
+                sec = &binary_v->getSections()[i];
+                if (strcmp(sec->getName(), argv[2]) == 0)
+                {
+                    for (j = 0; j < sec->getSize(); j++)
+                    {
+                        if (j % 0x10 == 0)
+                            fprintf(stdout, "\n0x%08X: ", j);
+
+                        fprintf(stdout, " %02X ", sec->getBytes()[j]);
+                    }
+                    fprintf(stdout,"\n");
+                    break;
+                }
+            }
+        }
+        
+
         loader_v->unload_binary();
 	}catch (std::exception &exc)
 	{
