@@ -58,18 +58,23 @@ int main (int argc, char **argv)
                 fprintf(stdout, " %-40s 0x%016jx %s\n",
                 sym->getName(),
                 sym->getAddr(),
-                (sym->getSymbolType() & loader::Symbol::SYM_TYPE_FUNC) ? "FUNC": "");
+                (sym->getSymbolType() & loader::Symbol::SYM_TYPE_FUNC) ? "FUNC": (
+                 (sym->getSymbolType() & loader::Symbol::SYM_TYPE_DATA) ? "DATA": "")
+                );
             }
         }
         
         if (argc == 3)
         {
-            fprintf (stdout, "\n[+] Section %s dump:", argv[2]);
+            fprintf (stdout, "\n[+] Section %s dump:\n", argv[2]);
             for (i = 0; i < binary_v->getSections().size(); i++)
             {
                 sec = &binary_v->getSections()[i];
                 if (strcmp(sec->getName(), argv[2]) == 0)
                 {
+                    fprintf(stdout, "%*s", 12, "");
+                    for (j = 0; j < 0x10; j++)
+                        fprintf(stdout, " %02X ", j);
                     for (j = 0; j < sec->getSize(); j++)
                     {
                         if (j % 0x10 == 0)
