@@ -14,7 +14,8 @@ namespace loader {
     void Symbol::setSymbolType(SymbolType new_type)
     {
         if (new_type != SYM_TYPE_UKN && 
-            new_type != SYM_TYPE_FUNC)
+            new_type != SYM_TYPE_FUNC &&
+            new_type != SYM_TYPE_DATA)
         {
             throw exception_t::error("Error symbol type incorrect");
         }
@@ -403,6 +404,7 @@ namespace loader {
         asymbol **bfd_symtab;
         Symbol *sym;
         char error_message[1000];
+        std::vector<std::string> weak_names;
 
         memset(error_message, 0, 1000);
 
@@ -434,11 +436,34 @@ namespace loader {
 
             for (i = 0; i < nsyms; i++)
             {
+                if (std::find(weak_names.begin(), weak_names.end(), std::string(bfd_symtab[i]->name)) != weak_names.end())
+                {
+                    remove_symbol_by_name(bfd_symtab[i]->name);
+                    weak_names.erase(
+                        std::remove(weak_names.begin(), weak_names.end(), std::string(bfd_symtab[i]->name)), 
+                        weak_names.end());
+                }
+
+                if (bfd_symtab[i]->flags & BSF_WEAK)
+                {
+                    weak_names.push_back(std::string(bfd_symtab[i]->name));
+                }
+
                 if (bfd_symtab[i]->flags & BSF_FUNCTION)
                 {
                     bin->getSymbols().push_back(Symbol());
                     sym = &bin->getSymbols().back();
                     sym->setSymbolType(Symbol::SYM_TYPE_FUNC);
+                    sym->setName(std::string(bfd_symtab[i]->name));
+                    sym->setAddr(static_cast<std::uint64_t>(bfd_asymbol_value(bfd_symtab[i])));
+                }
+                else if (((bfd_symtab[i]->flags & BSF_LOCAL) ||
+                          (bfd_symtab[i]->flags & BSF_GLOBAL)) &&
+                          bfd_symtab[i]->flags & BSF_OBJECT)
+                {
+                    bin->getSymbols().push_back(Symbol());
+                    sym = &bin->getSymbols().back();
+                    sym->setSymbolType(Symbol::SYM_TYPE_DATA);
                     sym->setName(std::string(bfd_symtab[i]->name));
                     sym->setAddr(static_cast<std::uint64_t>(bfd_asymbol_value(bfd_symtab[i])));
                 }
@@ -454,6 +479,7 @@ namespace loader {
         long n, nsyms, i;
         asymbol** bfd_dynsym;
         Symbol *sym;
+        std::vector<std::string> weak_names;
         char error_message[1000];
 
         memset(error_message, 0, 1000);
@@ -482,11 +508,33 @@ namespace loader {
 
             for (i = 0; i < nsyms; i++)
             {
+                if (std::find(weak_names.begin(), weak_names.end(), std::string(bfd_dynsym[i]->name)) != weak_names.end())
+                {
+                    remove_symbol_by_name(bfd_dynsym[i]->name);
+                    weak_names.erase(
+                        std::remove(weak_names.begin(), weak_names.end(), std::string(bfd_dynsym[i]->name)), 
+                        weak_names.end());
+                }
+
+                if (bfd_dynsym[i]->flags & BSF_WEAK)
+                {
+                    weak_names.push_back(std::string(bfd_dynsym[i]->name));
+                }
+
                 if (bfd_dynsym[i]->flags & BSF_FUNCTION)
                 {
                     bin->getSymbols().push_back(Symbol());
                     sym = &bin->getSymbols().back();
                     sym->setSymbolType(Symbol::SYM_TYPE_FUNC);
+                    sym->setName(std::string(bfd_dynsym[i]->name));
+                    sym->setAddr(static_cast<std::uint64_t>(bfd_asymbol_value(bfd_dynsym[i])));
+                }else if (((bfd_dynsym[i]->flags & BSF_LOCAL) ||
+                          (bfd_dynsym[i]->flags & BSF_GLOBAL)) &&
+                          bfd_dynsym[i]->flags & BSF_OBJECT)
+                {
+                    bin->getSymbols().push_back(Symbol());
+                    sym = &bin->getSymbols().back();
+                    sym->setSymbolType(Symbol::SYM_TYPE_DATA);
                     sym->setName(std::string(bfd_dynsym[i]->name));
                     sym->setAddr(static_cast<std::uint64_t>(bfd_asymbol_value(bfd_dynsym[i])));
                 }
@@ -546,6 +594,20 @@ namespace loader {
                 snprintf(error_message, 999, "failed to read section '%s' (%s)",
                     secname, bfd_errmsg(bfd_get_error()));
                 throw exception_t::error(error_message);
+            }
+        }
+    }
+
+    void Loader::remove_symbol_by_name(const char* name)
+    {
+        size_t i;
+
+        for (i = 0; i < bin->getSymbols().size(); i++)
+        {
+            if (strcmp(bin->getSymbols()[i].getName(), name) == 0)
+            {
+                bin->getSymbols().erase(bin->getSymbols().begin() + i);
+                break;
             }
         }
     }

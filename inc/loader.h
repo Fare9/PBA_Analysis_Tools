@@ -17,6 +17,7 @@
 #include <memory> // for smart pointers
 #include <bfd.h>
 #include <cstring>
+#include <algorithm>
 #include "error.h"
 
 namespace loader {
@@ -36,7 +37,8 @@ public:
     enum SymbolType
     {
         SYM_TYPE_UKN = 0,
-        SYM_TYPE_FUNC = 1
+        SYM_TYPE_FUNC = 1,
+        SYM_TYPE_DATA = 2
     };
 
     // generic constructor
@@ -178,6 +180,7 @@ private:
     void load_symbols_bfd();
     void load_dynsym_bfd();
     void load_sections_bfd();
+    void remove_symbol_by_name(const char* name);
 };
 
 
