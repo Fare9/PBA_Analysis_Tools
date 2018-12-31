@@ -99,9 +99,6 @@ int main (int argc, char **argv)
 
             for (size_t i = 0; i < diss_v->get_instructions_number(); i++)
             {
-                if ((!strcmp(inst[i].mnemonic,"nop")) && (inst[i].bytes[0] != 0x90))
-                    continue;
-
                 printf("0x%016jx: ", inst[i].address);
 
                 for (size_t j = 0; j < 16; j++)
