@@ -3,12 +3,16 @@
 #include <string>
 #include <iostream>
 #include <memory> // for smart pointers
+#include <capstone/capstone.h>
 #include "loader.h"
+#include "disassembler.h"
 #include "error.h"
 
 int main (int argc, char **argv)
 {
 	std::unique_ptr<loader::Loader> loader_v;
+    std::unique_ptr<disassembler::Disassembler> diss_v;
+    cs_insn* inst;
     loader::Binary* binary_v;
 	std::string fname;
 	size_t i, j;
@@ -86,6 +90,33 @@ int main (int argc, char **argv)
                     break;
                 }
             }
+
+            diss_v = std::make_unique<disassembler::Disassembler>(binary_v);
+
+            diss_v->init_disassembler();
+
+            inst = diss_v->linear_disassembly(argv[2]);
+
+            for (size_t i = 0; i < diss_v->get_instructions_number(); i++)
+            {
+                if ((!strcmp(inst[i].mnemonic,"nop")) && (inst[i].bytes[0] != 0x90))
+                    continue;
+
+                printf("0x%016jx: ", inst[i].address);
+
+                for (size_t j = 0; j < 16; j++)
+                {
+                    if (j < inst[i].size)
+                        printf("%02x ", inst[i].bytes[j]);
+                    else
+                        printf("   ");
+                }
+
+                printf("%-12s %s\n", inst[i].mnemonic, inst[i].op_str);
+            }
+
+            diss_v->destroy_instructions();
+            diss_v->destroy_disassembler();
         }
         
 

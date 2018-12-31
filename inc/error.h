@@ -1,8 +1,7 @@
 #ifndef ERROR_H
 #define ERROR_H
 
-#include <iostream>
-#include <string>
+#include "incs.h"
 
 namespace exception_t {
 

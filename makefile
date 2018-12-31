@@ -1,25 +1,31 @@
 CXX=g++
 MYLIBS=-I./inc/ 
-LIBBFD=-lbfd
+LDFLAGS=-lbfd -lcapstone
 CXXFLAGS=-std=c++14 -g -Wall
 
 SRC=./src/
 TEST=./tester/
 
-.PHONY: clean
+.PHONY: all clean setup
 
 all: $(TEST)tester
 
-$(TEST)tester: $(TEST)tester.o $(SRC)loader.o
-	$(CXX) $(MYLIBS) $(CXXFLAGS) -o $@ $^ $(LIBBFD)
+$(TEST)tester: $(TEST)tester.o $(SRC)loader.o $(SRC)disassembler.o
+	$(CXX) $(MYLIBS) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
 
 $(TEST)tester.o: $(TEST)tester.cpp
-	$(CXX) -c $(MYLIBS) $(CXXFLAGS) -o $@ $< $(LIBBFD)
+	$(CXX) -c $(MYLIBS) $(CXXFLAGS) -o $@ $< $(LDFLAGS)
 
 $(SRC)loader.o: $(SRC)loader.cpp
-	$(CXX) -c $(MYLIBS) $(CXXFLAGS) -o $@ $< $(LIBBFD)
+	$(CXX) -c $(MYLIBS) $(CXXFLAGS) -o $@ $< $(LDFLAGS)
+
+$(SRC)disassembler.o: $(SRC)disassembler.cpp
+	$(CXX) -c $(MYLIBS) $(CXXFLAGS) -o $@ $< $(LDFLAGS)
+
+setup:
+	sudo apt install binutils-multiarch-dev libcapstone-dev
 
 clean:
 	rm $(TEST)tester
 	rm $(TEST)tester.o
-	rm $(SRC)loader.o
+	rm $(SRC)%.o

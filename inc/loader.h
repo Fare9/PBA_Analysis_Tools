@@ -10,14 +10,8 @@
 #ifndef LOADER_H
 #define LOADER_H
 
-#include <cstdint>
-#include <string>
-#include <vector>
-#include <iostream>
-#include <memory> // for smart pointers
+#include "incs.h"
 #include <bfd.h>
-#include <cstring>
-#include <algorithm>
 #include "error.h"
 
 namespace loader {
@@ -117,6 +111,11 @@ public:
     {
         ARCH_NONE   = 0,
         ARCH_X86    = 1     // X86 include x32 and x64
+    };
+    enum BinaryClass
+    {
+        X86_32      = 32,
+        X86_64      = 64
     };
 
     Binary();

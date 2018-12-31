@@ -377,11 +377,11 @@ namespace loader {
         {
         case bfd_mach_i386_i386:
             bin->setBinaryArch(Binary::ARCH_X86);
-            bin->setBits(32);
+            bin->setBits(Binary::X86_32);
             break;
         case bfd_mach_x86_64:
             bin->setBinaryArch(Binary::ARCH_X86);
-            bin->setBits(64);
+            bin->setBits(Binary::X86_64);
             break;
         default:
             snprintf(error_message, 999, "unsupported architecture (%s)\n", bfd_info->printable_name);
