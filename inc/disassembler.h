@@ -56,6 +56,7 @@ private:
     std::map<std::uint64_t,bool>        seen;
     size_t                              remainder_size;
     std::vector<cs_insn *>              instructions_vector;
+    cs_insn*                            instruction;
 };
 
 

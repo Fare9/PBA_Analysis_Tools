@@ -8,7 +8,8 @@ namespace disassembler {
                                                         pc(nullptr),
                                                         addr(0),
                                                         offset(0),
-                                                        target(0)
+                                                        target(0),
+                                                        instruction(nullptr)
     {
         loader_v = std::make_unique<loader::Loader>(filename, loader::Binary::BIN_TYPE_AUTO);
 
@@ -23,7 +24,8 @@ namespace disassembler {
                                                         pc(nullptr),
                                                         addr(0),
                                                         offset(0),
-                                                        target(0)
+                                                        target(0),
+                                                        instruction(nullptr)
     {
         this->binary_v = binary_v;
     }
@@ -127,8 +129,8 @@ namespace disassembler {
             pc                  = section->getBytes() + offset;
             remainder_size      = section->getSize() - offset;
 
-            instructions = cs_malloc(dis);
-            if (!instructions)
+            instruction = cs_malloc(dis);
+            if (!instruction)
             {
                 throw exception_t::error("Error calling cs_malloc, out of memory");
             }
@@ -138,36 +140,36 @@ namespace disassembler {
                 &pc,
                 &remainder_size,
                 &addr,
-                instructions
+                instruction
             ))
             {
-                instructions_vector.push_back(instructions);
+                instructions_vector.push_back(instruction);
 
-                if (instructions->id == X86_INS_INVALID ||
-                    instructions->size == 0)
+                if (instruction->id == X86_INS_INVALID ||
+                    instruction->size == 0)
                     break;
 
-                instructions = cs_malloc(dis);
-                if (!instructions)
+                instruction = cs_malloc(dis);
+                if (!instruction)
                 {
                     throw exception_t::error("Error calling cs_malloc, out of memory");
                 }
             }
 
-            seen[instructions->address] = true;
+            seen[instruction->address] = true;
 
-            if (is_cs_cflow_ins(instructions))
+            if (is_cs_cflow_ins(instruction))
             {
-                target = get_cs_ins_immediate_target(instructions);
+                target = get_cs_ins_immediate_target(instruction);
 
                 if (target && !seen[target] && section->contains(target))
                 {
                     Q.push(target);
                     printf("   -> new target: 0x%016jx\n", target);    
                 }
-                if (is_cs_unconditional_cflow_ins(instructions))
+                if (is_cs_unconditional_cflow_ins(instruction))
                     break;
-            } else if (instructions->id == X86_INS_HLT)
+            } else if (instruction->id == X86_INS_HLT)
                 break;
         }
 
