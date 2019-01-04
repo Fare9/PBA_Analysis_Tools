@@ -241,8 +241,8 @@ namespace loader {
     *   Loader functions
     */
     Loader::Loader(const char* file_name, Binary::BinaryType bin_type) : bfd_inited(false),
-                                      bfd_h(nullptr),
                                       fname(file_name),
+                                      bfd_h(nullptr),
                                       type(bin_type)
     {
         bin = std::make_shared<Binary>();
@@ -283,7 +283,6 @@ namespace loader {
     void Loader::open_bfd()
     {
         char error_message[1000];
-
 
         memset(error_message,0,1000);
 

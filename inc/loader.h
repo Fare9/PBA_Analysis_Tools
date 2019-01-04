@@ -166,12 +166,12 @@ public:
     
     Binary* getBinary();
 private:
-    std::string fname;
-    bool bfd_inited;
-    bfd *bfd_h;
-    std::shared_ptr<Binary> bin;
-    Binary::BinaryType type;
-    const bfd_arch_info_type* bfd_info;
+    bool                        bfd_inited;
+    std::string                 fname;
+    bfd*                        bfd_h;
+    std::shared_ptr<Binary>     bin;
+    Binary::BinaryType          type;
+    const bfd_arch_info_type*   bfd_info;
 
     // private function
     void open_bfd();
