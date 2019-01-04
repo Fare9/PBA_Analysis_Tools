@@ -78,11 +78,11 @@ int main (int argc, char **argv)
                 {
                     fprintf(stdout, "%*s", 12, "");
                     for (j = 0; j < 0x10; j++)
-                        fprintf(stdout, " %02X ", j);
+                        fprintf(stdout, " %02X ", static_cast<unsigned int>(j));
                     for (j = 0; j < sec->getSize(); j++)
                     {
                         if (j % 0x10 == 0)
-                            fprintf(stdout, "\n0x%08X: ", j);
+                            fprintf(stdout, "\n0x%08X: ", static_cast<unsigned int>(j));
 
                         fprintf(stdout, " %02X ", sec->getBytes()[j]);
                     }
@@ -113,6 +113,27 @@ int main (int argc, char **argv)
             }
 
             diss_v->destroy_instructions();
+
+            printf("============= Recursive Disassembler ================\n");
+
+            const std::vector<cs_insn *> instructions = diss_v->recursive_disassembly();
+
+            for (size_t i = 0; i < instructions.size(); i++)
+            {
+                printf("0x%016jx: ", instructions[i]->address);
+
+                for (size_t j = 0; j < 16; j++)
+                {
+                    if (j < instructions[i]->size)
+                        printf("%02x ", instructions[i]->bytes[j]);
+                    else
+                        printf("   ");
+                }
+
+                printf("%-12s %s\n", instructions[i]->mnemonic, instructions[i]->op_str);
+            }
+
+            diss_v->destroy_instructions_vector();
             diss_v->destroy_disassembler();
         }
         
