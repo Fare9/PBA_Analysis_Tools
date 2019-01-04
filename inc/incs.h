@@ -10,5 +10,7 @@
 #include <memory> // for smart pointers
 #include <cstring>
 #include <algorithm>
+#include <queue>
+#include <map>
 
 #endif
