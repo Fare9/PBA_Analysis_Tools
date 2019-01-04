@@ -27,5 +27,5 @@ setup:
 
 clean:
 	rm $(TEST)tester
-	rm $(TEST)tester.o
-	rm $(SRC)%.o
+	rm $(TEST)*.o
+	rm $(SRC)*.o
