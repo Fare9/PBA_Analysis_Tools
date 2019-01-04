@@ -1,5 +1,10 @@
 #include "disassembler.h"
 
+bool compareByAddress(const cs_insn *a,const cs_insn *b)
+{
+    return a->address < b->address;
+}
+
 namespace disassembler {
 
     Disassembler::Disassembler(const char *filename) : instructions(nullptr),
@@ -149,29 +154,31 @@ namespace disassembler {
                     instruction->size == 0)
                     break;
 
+                seen[instruction->address] = true;
+
+                if (is_cs_cflow_ins(instruction))
+                {
+                    target = get_cs_ins_immediate_target(instruction);
+
+                    if (target && !seen[target] && section->contains(target))
+                    {
+                        Q.push(target);
+                        printf("   -> new target: 0x%016jx\n", target);    
+                    }
+                    if (is_cs_unconditional_cflow_ins(instruction))
+                        break;
+                } else if (instruction->id == X86_INS_HLT)
+                    break;
+
                 instruction = cs_malloc(dis);
                 if (!instruction)
                 {
                     throw exception_t::error("Error calling cs_malloc, out of memory");
                 }
             }
-
-            seen[instruction->address] = true;
-
-            if (is_cs_cflow_ins(instruction))
-            {
-                target = get_cs_ins_immediate_target(instruction);
-
-                if (target && !seen[target] && section->contains(target))
-                {
-                    Q.push(target);
-                    printf("   -> new target: 0x%016jx\n", target);    
-                }
-                if (is_cs_unconditional_cflow_ins(instruction))
-                    break;
-            } else if (instruction->id == X86_INS_HLT)
-                break;
         }
+
+        std::sort(instructions_vector.begin(),instructions_vector.end(), compareByAddress);
 
         return instructions_vector;
     }
