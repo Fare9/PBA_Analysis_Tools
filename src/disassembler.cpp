@@ -288,11 +288,10 @@ namespace disassembler {
         cs_option(dis, CS_OPT_DETAIL, CS_OPT_ON);
 
         for (size_t i = 0; i < section->getSize(); i++)
-        {
-            if (section->getBytes()[i] == x86_opc_ret)
+        {   
+            if (std::find(x86_opc_ret.begin(),x86_opc_ret.end(), section->getBytes()[i]) != x86_opc_ret.end())
             {
                 find_rop_gadgets_at_root(section->getVMA() + i);
-                break;
             }
         }
 
@@ -334,7 +333,9 @@ namespace disassembler {
                     break;
                 else if (++len > max_gadget_len)
                     break;
-                
+                else if (is_cs_ret_ins(instruction) && instruction->address != root)
+                    break;
+                    
                 gadget_str += std::string(instruction->mnemonic)
                               + " " + std::string(instruction->op_str);
 
@@ -347,6 +348,8 @@ namespace disassembler {
                 gadget_str += "; ";
             }
         }
+
+        cs_free(instruction, 1);
     }
 
     bool Disassembler::is_cs_ret_ins(cs_insn *ins)

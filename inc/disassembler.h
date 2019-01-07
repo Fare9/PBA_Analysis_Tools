@@ -65,7 +65,7 @@ private:
 
     // find rop gadgets variables
     rop_gadget_t                                        rop_gadgets;
-    const std::uint8_t                                  x86_opc_ret = 0xC3;
+    std::list<std::uint8_t>                             x86_opc_ret = {0xC3, 0xC2};
 };
 
 
