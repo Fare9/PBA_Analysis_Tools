@@ -134,6 +134,20 @@ int main (int argc, char **argv)
             }
 
             diss_v->destroy_instructions_vector();
+
+            printf("============= ROP finder ============================\n");
+            const disassembler::Disassembler::rop_gadget_t rops = diss_v->find_rop_gadgets();
+            for (auto &kv: rops)
+            {
+                fprintf(stdout, "%s\t[ ", kv.first.c_str());
+                for (auto addr: kv.second)
+                {
+                    fprintf(stdout, "0x%jx ", addr);
+                }
+
+                fprintf(stdout, "]\n");
+            }
+
             diss_v->destroy_disassembler();
         }
         

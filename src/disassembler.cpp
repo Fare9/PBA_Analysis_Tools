@@ -271,4 +271,92 @@ namespace disassembler {
 
         return 0;
     }
+
+    const std::map<std::string, std::vector<std::uint64_t>>& Disassembler::find_rop_gadgets()
+    {
+        char error_message[1000];
+
+        memset(error_message,0,1000);
+
+        section = binary_v->get_text_sections();
+
+        if (!section)
+        {
+            throw exception_t::error("Nothing to disassemble");
+        }
+
+        cs_option(dis, CS_OPT_DETAIL, CS_OPT_ON);
+
+        for (size_t i = 0; i < section->getSize(); i++)
+        {
+            if (section->getBytes()[i] == x86_opc_ret)
+            {
+                find_rop_gadgets_at_root(section->getVMA() + i);
+                break;
+            }
+        }
+
+        return rop_gadgets;
+    }
+
+    void Disassembler::find_rop_gadgets_at_root(std::uint64_t root)
+    {
+        size_t len;
+        std::string gadget_str;
+        const size_t max_gadget_len = 5; // number of instructions
+        const size_t x86_max_ins_bytes = 15;
+        const std::uint64_t root_offset = max_gadget_len * x86_max_ins_bytes;
+
+        instruction = cs_malloc(dis);
+        if (!instruction)
+        {
+            throw exception_t::error("Error calling cs_malloc, out of memory");
+        }
+
+        for (std::uint64_t a = root -1;
+             a >= root - root_offset && a >= 0;
+             a--)
+        {
+            addr            = a;
+            offset          = addr - section->getVMA();
+            pc              = section->getBytes() + offset;
+            remainder_size  = section->getSize() - offset;
+            len             = 0;
+            gadget_str      = "";
+
+            while (cs_disasm_iter(dis, &pc, &remainder_size, &addr, instruction))
+            {
+                if (instruction->id == X86_INS_INVALID || instruction->size == 0)
+                    break;
+                else if (instruction->address > root)
+                    break;
+                else if (is_cs_cflow_ins(instruction) && !is_cs_ret_ins(instruction))
+                    break;
+                else if (++len > max_gadget_len)
+                    break;
+                
+                gadget_str += std::string(instruction->mnemonic)
+                              + " " + std::string(instruction->op_str);
+
+                if (instruction->address == root)
+                {
+                    rop_gadgets[gadget_str].push_back(a);
+                    break;
+                }
+
+                gadget_str += "; ";
+            }
+        }
+    }
+
+    bool Disassembler::is_cs_ret_ins(cs_insn *ins)
+    {
+        switch (ins->id)
+        {
+        case X86_INS_RET:
+            return true;
+        default:
+            return false;
+        }
+    }
 }
