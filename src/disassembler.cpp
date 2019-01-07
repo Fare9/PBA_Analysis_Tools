@@ -335,7 +335,9 @@ namespace disassembler {
                     break;
                 else if (is_cs_ret_ins(instruction) && instruction->address != root)
                     break;
-                    
+                else if (instruction->address != root && !is_cs_valid_ins(instruction))
+                    break;
+
                 gadget_str += std::string(instruction->mnemonic)
                               + " " + std::string(instruction->op_str);
 
@@ -362,4 +364,34 @@ namespace disassembler {
             return false;
         }
     }
+
+    bool Disassembler::is_cs_valid_ins(cs_insn *ins)
+    {
+        switch (ins->id)
+        {
+        case X86_INS_MOV:
+        case X86_INS_POP:
+        case X86_INS_ADD:
+        case X86_INS_ADC:
+        case X86_INS_SUB:
+        case X86_INS_XCHG:
+        case X86_INS_LEA:
+        case X86_INS_LES:
+        case X86_INS_LEAVE:
+                return true;
+        case X86_INS_XOR:
+        case X86_INS_AND:
+        case X86_INS_OR:
+        case X86_INS_PUSH:
+                for (size_t i = 0; i < ins->detail->x86.op_count; i++)
+                {
+                    if (!ins->detail->x86.operands[i].reg)
+                        return false;
+                }
+                return true;
+            default:
+                return false;
+        }
+    }
+
 }

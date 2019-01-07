@@ -44,6 +44,7 @@ private:
     // private functions for find rop gadgets
     void find_rop_gadgets_at_root(std::uint64_t root);
     bool is_cs_ret_ins(cs_insn *ins);
+    bool is_cs_valid_ins(cs_insn *ins);
 
     loader::Binary*                                     binary_v;
     std::unique_ptr<loader::Loader>                     loader_v;
